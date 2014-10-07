@@ -84,12 +84,12 @@ class VolumesAPI_CommonBehaviors(BaseBehavior):
 
         return timeout
 
-    def calculate_snapshot_restore_timeout(self, image_size):
+    def calculate_restore_snapshot_timeout(self, image_size):
         timeout = self._calculate_timeout(
             size=image_size,
-            max_timeout=self.config.snapshot_restore_max_timeout,
-            min_timeout=self.config.snapshot_restore_min_timeout,
-            wait_per_gb=self.config.snapshot_restore_wait_per_gigabyte)
+            max_timeout=self.config.restore_snapshot_max_timeout,
+            min_timeout=self.config.restore_snapshot_min_timeout,
+            wait_per_gb=self.config.restore_snapshot_wait_per_gigabyte)
         if not timeout:
             timeout = self.config.snapshot_restore_base_timeout
         else:
@@ -140,27 +140,6 @@ class VolumesAPI_CommonBehaviors(BaseBehavior):
         and v2 volumes api's for other methods in this behavior that
         also call create_volume."""
         raise NotImplementedError
-
-    def get_configured_volume_type_property(
-            self, configured_property, id_=None, name=None):
-        configured_data = self.config.volume_type_properties
-
-        # Raise an exception if any of the configured data has null
-        # values in it
-        property_names = ["name", "id"]
-        for entry in configured_data:
-            for pname in property_names:
-                if hasattr(entry, pname):
-                    if entry.get(pname) is None:
-                        raise Exception(
-                            "Ambiguous volume type properties: 'null' value "
-                            "found for configured volume type property '{0}'"
-                            .format(pname))
-
-            if name and str(entry.get('name') == str(name)):
-                return entry.get(configured_property)
-            if id_ is not None and str(entry.get('id')) == str(id_):
-                return entry.get(configured_property)
 
     def get_volume_info(self, volume_id):
         resp = self.client.get_volume_info(volume_id=volume_id)
@@ -491,7 +470,7 @@ class VolumesAPI_CommonBehaviors(BaseBehavior):
             return False
         return True
 
-    def get_volume_type_list(self):
+    def get_volume_types(self):
         resp = self.client.list_all_volume_types()
         self._verify_entity(resp)
         return resp.entity

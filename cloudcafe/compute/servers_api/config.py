@@ -140,6 +140,11 @@ class ServersConfig(ConfigSectionInterface):
         return json.loads(self.get("expected_networks", '{}'))
 
     @property
+    def floating_ip_pool_name(self):
+        """Name of the floating IP pool"""
+        return self.get("floating_ip_pool_name")
+
+    @property
     def default_network(self):
         """Id of the network to use by default for servers"""
         return self.get("default_network")
@@ -178,3 +183,11 @@ class ServersConfig(ConfigSectionInterface):
         The path to which files will be injected.
         """
         return self.get("default_file_path")
+
+    @property
+    def auto_assign_floating_ip(self):
+        """
+        If a floating IP address should be assigned to created
+        servers by default.
+        """
+        return self.get_boolean("auto_assign_floating_ip", False)

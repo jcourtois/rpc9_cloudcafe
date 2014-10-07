@@ -390,7 +390,7 @@ class LinuxClient(RemoteInstanceClient):
         @rtype: dict
         """
 
-        disks_raw = self.ssh_client.execute_command('fdisk -l')
+        disks_raw = self.ssh_client.execute_command('sudo /sbin/fdisk -l')
         if disks_raw is None:
             return None
         disks_raw = disks_raw.stdout
@@ -565,24 +565,3 @@ class LinuxClient(RemoteInstanceClient):
             if int(output.stdout) is 0:
                 status_of_activation = True
         return status_of_activation
-
-    def get_distribution_and_version(self):
-        """
-        Get the distribution and version of the server
-        Works for all Linux distibutions, not working for freebsd
-        example root@ivo-ubuntu-2:~# lsb_release -d
-            Description:    Ubuntu 12.04.4 LTS
-        @return: Full name of the distibution
-        @rtype: int
-        """
-
-        result = self.ssh_client.execute_command('lsb_release -d')
-        if result:
-            try:
-                distro = result.stdout.split(':')[1]
-                return distro
-            except IndexError:
-                return ''
-
-    def filesystem_sync(self):
-        self.ssh_client.execute_command('sync')

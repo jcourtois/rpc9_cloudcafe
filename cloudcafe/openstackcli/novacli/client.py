@@ -185,7 +185,6 @@ class NovaCLI(BaseOpenstackPythonCLI_Client):
         """
 
         _cmd = 'volume-attach'
-        device = device or 'auto'
         _response_type = responses.VolumeAttachResponse
         return self._process_command()
 

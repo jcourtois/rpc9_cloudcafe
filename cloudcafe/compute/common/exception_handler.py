@@ -29,13 +29,12 @@ class ExceptionHandler:
     error_codes_list = [400, 401, 403, 404, 405, 409, 413, 415, 500, 501, 503]
 
     def check_for_errors(self, resp):
-
         if resp.status_code not in self.error_codes_list:
             return
 
         type = None
         resp_body_dict = None
-        if resp.text != "":
+        if resp.text != "" and resp.status_code in [400, 409, 413, 500, 501]:
             resp_body_dict, type = self._parse_resp_body(resp.text)
 
         if resp.status_code == 400 and type == 'html':

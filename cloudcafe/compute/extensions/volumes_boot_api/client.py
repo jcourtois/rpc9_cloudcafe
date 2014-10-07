@@ -49,7 +49,7 @@ class VolumesBootClient(AutoMarshallingHTTPClient):
         self.default_headers['Accept'] = accept
         self.url = url
 
-    def create_server(self, name, flavor_ref, block_device_mapping_v2,
+    def create_server(self, name, flavor_ref, block_device_mapping_v2, security_groups,
                       max_count=None, min_count=None, networks=None,
                       image_ref=None, personality=None, user_data=None,
                       metadata=None, accessIPv4=None, accessIPv6=None,
@@ -101,7 +101,7 @@ class VolumesBootClient(AutoMarshallingHTTPClient):
         """
 
         server_request_object = CreateServerFromVolume(
-            name=name, flavor_ref=flavor_ref,
+            name=name, flavor_ref=flavor_ref, security_groups=security_groups,
             block_device_mapping_v2=block_device_mapping_v2,
             max_count=max_count, min_count=min_count, networks=networks,
             image_ref=image_ref, personality=personality, user_data=user_data,

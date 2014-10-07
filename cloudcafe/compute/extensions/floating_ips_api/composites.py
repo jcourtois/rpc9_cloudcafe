@@ -14,29 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from cloudcafe.compute.common.composites import BaseComputeComposite
+from cloudcafe.compute.extensions.floating_ips_api.client import \
+    FloatingIPsClient
 
-class NeutronResponseCodes(object):
-    """HTTP Neutron API Response codes"""
 
-    LIST_NETWORKS = 200
-    GET_NETWORK = 200
-    CREATE_NETWORK = 201
-    UPDATE_NETWORK = 200
-    DELETE_NETWORK = 204
-    LIST_SUBNETS = 200
-    GET_SUBNET = 200
-    CREATE_SUBNET = 201
-    UPDATE_SUBNET = 200
-    DELETE_SUBNET = 204
-    LIST_PORTS = 200
-    GET_PORT = 200
-    CREATE_PORT = 201
-    UPDATE_PORT = 200
-    DELETE_PORT = 204
+class FloatingIPsComposite(BaseComputeComposite):
 
-    BAD_REQUEST = 400
-    UNAUTHORIZED = 401
-    FORBIDDEN = 403
-    NOT_FOUND = 404
-    CONFLICT = 409
-    MAC_GENERATION_FAILURE = 503
+    def __init__(self, auth_composite):
+        super(FloatingIPsComposite, self).__init__(auth_composite)
+        self.client = FloatingIPsClient(
+            **self.compute_auth_composite.client_args)

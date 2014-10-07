@@ -25,7 +25,7 @@ from cloudcafe.compute.common.exceptions import \
 class VolumeServerBehaviors(BaseBehavior):
 
     def __init__(self, servers_client, images_client, servers_config,
-                 images_config, flavors_config, server_behaviors,
+                 images_config, flavors_config, server_behaviors, security_groups_config,
                  boot_from_volume_client=None):
         super(VolumeServerBehaviors, self).__init__()
         self.config = servers_config
@@ -34,6 +34,7 @@ class VolumeServerBehaviors(BaseBehavior):
         self.images_config = images_config
         self.flavors_config = flavors_config
         self.server_behaviors = server_behaviors
+        self.security_groups_config = security_groups_config
         self.boot_from_volume_client = boot_from_volume_client
 
     def create_active_server(
@@ -42,7 +43,8 @@ class VolumeServerBehaviors(BaseBehavior):
             accessIPv4=None, accessIPv6=None, disk_config=None,
             networks=None, key_name=None, config_drive=None,
             scheduler_hints=None, admin_pass=None, max_count=None,
-            min_count=None, block_device_mapping=None, block_device=None):
+            min_count=None, block_device_mapping=None, block_device=None,
+            security_groups=None):
         """
         @summary:Creates a server and waits for server to reach active status
         @param name: The name of the server.
@@ -83,6 +85,16 @@ class VolumeServerBehaviors(BaseBehavior):
         if self.config.default_network:
             networks = [{'uuid': self.config.default_network}]
 
+        default_group_id = self.security_groups_config.default_security_group
+        default_groups = None
+        if default_group_id:
+            default_groups = [{"name": default_group_id}]
+
+        if default_groups and security_groups:
+            security_groups.update(default_groups)
+        else:
+            security_groups = security_groups or default_groups
+
         failures = []
         attempts = self.config.resource_build_attempts
         for attempt in range(attempts):
@@ -99,6 +111,7 @@ class VolumeServerBehaviors(BaseBehavior):
                 metadata=metadata, accessIPv4=accessIPv4,
                 accessIPv6=accessIPv6, disk_config=disk_config,
                 admin_pass=admin_pass, key_name=key_name,
+                security_groups=security_groups,
                 config_drive=config_drive, scheduler_hints=scheduler_hints)
             server_obj = resp.entity
             create_request_id = resp.headers.get('x-compute-request-id')
