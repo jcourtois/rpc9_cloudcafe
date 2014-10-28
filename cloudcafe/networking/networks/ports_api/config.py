@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from cloudcafe.networking.networks.common.config import NetworkingBaseConfig
+from cloudcafe.common.models.configuration import ConfigSectionInterface
 
 
-class PortsConfig(NetworkingBaseConfig):
+class PortsAPIConfig(ConfigSectionInterface):
     """Port is the resource"""
 
-    SECTION_NAME = 'ports'
+    SECTION_NAME = 'ports_api'
 
     @property
     def resource_build_attempts(self):
@@ -48,6 +48,6 @@ class PortsConfig(NetworkingBaseConfig):
         return int(self.get("resource_delete_timeout", 15))
 
     @property
-    def starts_with_name(self):
-        """Port start name label for test runs"""
-        return self.get("starts_with_name", "test_port")
+    def resource_change_status_timeout(self):
+        """Seconds to wait for a status change in the resource"""
+        return int(self.get("resource_change_status_timeout", 15))

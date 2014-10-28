@@ -30,13 +30,15 @@ from cloudcafe.compute.common.exceptions import ItemNotFound, \
 
 class ServerBehaviors(BaseBehavior):
 
-    def __init__(self, servers_client, images_client, servers_config,
-                 images_config, flavors_config, boot_from_volume_client=None,
-                 security_groups_config=None):
+    def __init__(
+            self, servers_client, images_client, floating_ips_client,
+            servers_config, images_config, flavors_config,
+            boot_from_volume_client=None, security_groups_config=None):
         super(ServerBehaviors, self).__init__()
         self.config = servers_config
         self.servers_client = servers_client
         self.images_client = images_client
+        self.floating_ips_client = floating_ips_client
         self.images_config = images_config
         self.flavors_config = flavors_config
         self.boot_from_volume_client = boot_from_volume_client
@@ -151,6 +153,10 @@ class ServerBehaviors(BaseBehavior):
                 # into the final response
                 resp.entity.admin_pass = server_obj.admin_pass
                 resp.headers['x-compute-request-id'] = create_request_id
+
+                # If a floating IP should be assigned, create and assign one
+                if self.config.auto_assign_floating_ip:
+                    self._create_and_assign_floating_ip(server_obj.id)
                 return resp
             except (TimeoutException, BuildErrorException) as ex:
                 self._log.error('Failed to build server {server_id}: '
@@ -158,11 +164,33 @@ class ServerBehaviors(BaseBehavior):
                                                    message=ex.message))
                 failures.append(ex.message)
                 self.servers_client.delete_server(server_obj.id)
-
+        from pdb import set_trace; set_trace()
         raise RequiredResourceException(
             'Failed to successfully build a server after '
             '{attempts} attempts: {failures}'.format(
                 attempts=attempts, failures=failures))
+
+    def _create_and_assign_floating_ip(self, server_id):
+        """
+        @summary: Creates a floating IP and assigns to the given server
+        @param server_id: The uuid of the server
+        @type server_id: String
+        """
+
+        pool_name = self.config.floating_ip_pool_name
+        response = self.floating_ips_client.create_floating_ip(pool=pool_name)
+        if not response.ok:
+            self._log.error('Failed to create a floating IP address.')
+            return
+
+        floating_ip = response.entity
+        response = self.servers_client.add_floating_ip(
+            server_id, floating_ip.ip)
+        if not response.ok:
+            self._log.error(
+                'Failed to assign floating ip {address} '
+                'to server {server_id}.'.format(address=floating_ip.ip,
+                                                server_id=server_id))
 
     def wait_for_server_status(self, server_id, desired_status,
                                interval_time=None, timeout=None):
@@ -205,6 +233,7 @@ class ServerBehaviors(BaseBehavior):
             server = resp.entity
 
             if server.status.lower() == ServerStates.ERROR.lower():
+                from pdb import set_trace; set_trace()
                 raise BuildErrorException(
                     "Build failed. Server with uuid {server_id} entered "
                     "ERROR status.".format(server_id=server.id))
@@ -453,6 +482,11 @@ class ServerBehaviors(BaseBehavior):
             elif config.ip_address_version_for_ssh == 6:
                 ip_address = network.ipv6
 
+        import json
+        response = self.servers_client.get_server(server.id)
+        content = json.loads(response.content)
+        ip_address = content['server']['addresses'][config.network_for_ssh][-1]['addr']
+
         # Get Server Image ID
         if server.image:
             image_id = server.image.id
@@ -477,7 +511,6 @@ class ServerBehaviors(BaseBehavior):
 
         user = self.images_config.primary_image_default_user
         strategy = auth_strategy or self.config.instance_auth_strategy.lower()
-
         try:
             if InstanceAuthStrategies.PASSWORD in strategy:
                 if password is None:
@@ -486,6 +519,7 @@ class ServerBehaviors(BaseBehavior):
                     ip_address=ip_address, username=user, password=password,
                     connection_timeout=self.config.connection_timeout)
             else:
+                from IPython import embed; embed()
                 return client(
                     ip_address=ip_address, username=user, key=key,
                     connection_timeout=self.config.connection_timeout)

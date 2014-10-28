@@ -19,13 +19,13 @@ import json
 from cafe.engine.models.base import AutoMarshallingModel
 
 
-class ServerRequest(AutoMarshallingModel):
+class CreateFloatingIP(AutoMarshallingModel):
 
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, pool):
+
+        super(CreateFloatingIP, self).__init__()
+        self.pool = pool
 
     def _obj_to_json(self):
-        return json.dumps(self._obj_to_dict())
-
-    def _obj_to_dict(self):
-        return {"name": self.name}
+        body = {'pool': self.pool}
+        return json.dumps(body)

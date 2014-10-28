@@ -25,7 +25,7 @@ from cloudcafe.compute.servers_api.models.requests import Personality
 
 class CreateServerFromVolume(AutoMarshallingModel):
 
-    def __init__(self, name, flavor_ref, block_device_mapping_v2,
+    def __init__(self, name, flavor_ref, block_device_mapping_v2, security_groups,
                  max_count=None, min_count=None, networks=None,
                  image_ref=None, personality=None, user_data=None,
                  metadata=None, accessIPv4=None, accessIPv6=None,
@@ -35,6 +35,7 @@ class CreateServerFromVolume(AutoMarshallingModel):
         super(CreateServerFromVolume, self).__init__()
         self.name = name
         self.flavor_ref = flavor_ref
+        self.security_groups = security_groups
         self.block_device_mapping_v2 = block_device_mapping_v2
         self.max_count = max_count
         self.min_count = min_count
@@ -59,6 +60,7 @@ class CreateServerFromVolume(AutoMarshallingModel):
             'max_count': self.max_count,
             'min_count': self.min_count,
             'networks': self.networks,
+            'security_groups': self.security_groups,
             'imageRef': self.image_ref,
             'personality': self.personality,
             'user_data': self.user_data,
