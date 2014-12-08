@@ -27,6 +27,39 @@ from cloudcafe.compute.common.exceptions import ItemNotFound, \
     TimeoutException, BuildErrorException, RequiredResourceException, \
     ServerUnreachable, SshConnectionException
 
+public_rackspace_addresses = {
+	"10.17.255.194": "104.130.183.160",
+	"10.17.255.195": "104.130.183.161",
+	"10.17.255.196": "104.130.183.162",
+	"10.17.255.197": "104.130.183.163",
+	"10.17.255.198": "104.130.183.164",
+	"10.17.255.199": "104.130.183.165",
+	"10.17.255.200": "104.130.183.166",
+	"10.17.255.201": "104.130.183.167",
+	"10.17.255.202": "104.130.183.168",
+	"10.17.255.203": "104.130.183.169",
+	"10.17.255.204": "104.130.183.170",
+	"10.17.255.205": "104.130.183.171",
+	"10.17.255.206": "104.130.183.172",
+	"10.17.255.207": "104.130.183.173",
+	"10.17.255.208": "104.130.183.174",
+	"10.17.255.209": "104.130.183.175",
+	"10.17.255.210": "104.130.183.176",
+	"10.17.255.211": "104.130.183.177",
+	"10.17.255.212": "104.130.183.178",
+	"10.17.255.213": "104.130.183.179",
+	"10.17.255.214": "104.130.183.180",
+	"10.17.255.215": "104.130.183.181",
+	"10.17.255.216": "104.130.183.182",
+	"10.17.255.217": "104.130.183.183",
+	"10.17.255.218": "104.130.183.184",
+	"10.17.255.219": "104.130.183.185",
+	"10.17.255.220": "104.130.183.186",
+	"10.17.255.221": "104.130.183.187",
+	"10.17.255.222": "104.130.183.188",
+	"10.17.255.223": "104.130.183.189",
+	"10.17.255.224": "104.130.183.190"
+}
 
 class ServerBehaviors(BaseBehavior):
 
@@ -154,9 +187,10 @@ class ServerBehaviors(BaseBehavior):
                 resp.entity.admin_pass = server_obj.admin_pass
                 resp.headers['x-compute-request-id'] = create_request_id
 
-                # If a floating IP should be assigned, create and assign one
                 if self.config.auto_assign_floating_ip:
-                    self._create_and_assign_floating_ip(server_obj.id)
+                    self.force_assign_floating_ip_from_pool(server_obj.id)
+                    resp.entity.addresses = self.servers_client.get_server(server_obj.id).entity.addresses
+                    # ugly hack to make sure the server object is not out of date
                 return resp
             except (TimeoutException, BuildErrorException) as ex:
                 self._log.error('Failed to build server {server_id}: '
@@ -170,26 +204,31 @@ class ServerBehaviors(BaseBehavior):
             '{attempts} attempts: {failures}'.format(
                 attempts=attempts, failures=failures))
 
-    def _create_and_assign_floating_ip(self, server_id):
-        """
-        @summary: Creates a floating IP and assigns to the given server
-        @param server_id: The uuid of the server
-        @type server_id: String
-        """
+    def force_assign_floating_ip_from_pool(self, server_id):
+        """This method will disassociate a floating ip if none is unused."""
+        floating_ips = self.floating_ips_client.list_floating_ips().entity
+        available_ips = [ip for ip in floating_ips if ip.instance_id is None]
+        if available_ips is None:
+            ip_to_clear = floating_ips[-1]
+            self.disassociate_floating_ip(ip_to_clear.ip,
+                                          ip_to_clear.instance_id)
+        self.associate_floating_ip(available_ips[0], server_id)
 
-        pool_name = self.config.floating_ip_pool_name
-        response = self.floating_ips_client.create_floating_ip(pool=pool_name)
-        if not response.ok:
-            self._log.error('Failed to create a floating IP address.')
-            return
-
-        floating_ip = response.entity
+    def associate_floating_ip(self, floating_ip, server_id):
         response = self.servers_client.add_floating_ip(
             server_id, floating_ip.ip)
         if not response.ok:
             self._log.error(
-                'Failed to assign floating ip {address} '
+                'Failed to associate floating ip {address} '
                 'to server {server_id}.'.format(address=floating_ip.ip,
+                                                server_id=server_id))
+
+    def disassociate_floating_ip(self, floating_ip, server_id):
+        resp = self.servers_client.delete_floating_ip(floating_ip, server_id)
+        if not resp.ok:
+            self._log.error(
+                'Failed to disassociate floating ip {address} '
+                'to server {server_id}.'.format(address=floating_ip,
                                                 server_id=server_id))
 
     def wait_for_server_status(self, server_id, desired_status,
@@ -233,7 +272,7 @@ class ServerBehaviors(BaseBehavior):
             server = resp.entity
 
             if server.status.lower() == ServerStates.ERROR.lower():
-                from pdb import set_trace; set_trace()
+                # from pdb import set_trace; set_trace()
                 raise BuildErrorException(
                     "Build failed. Server with uuid {server_id} entered "
                     "ERROR status.".format(server_id=server.id))
@@ -486,6 +525,8 @@ class ServerBehaviors(BaseBehavior):
         response = self.servers_client.get_server(server.id)
         content = json.loads(response.content)
         ip_address = content['server']['addresses'][config.network_for_ssh][-1]['addr']
+        if ip_address in public_rackspace_addresses.keys():
+		ip_address = public_rackspace_addresses[ip_address]
 
         # Get Server Image ID
         if server.image:
@@ -519,7 +560,6 @@ class ServerBehaviors(BaseBehavior):
                     ip_address=ip_address, username=user, password=password,
                     connection_timeout=self.config.connection_timeout)
             else:
-                from IPython import embed; embed()
                 return client(
                     ip_address=ip_address, username=user, key=key,
                     connection_timeout=self.config.connection_timeout)
@@ -531,6 +571,7 @@ class ServerBehaviors(BaseBehavior):
                     id=server.id, address=ip_address,
                     timeout=self.config.connection_timeout))
         except SshConnectionException:
+            from IPython import embed; embed()
             raise SshConnectionException(
                 'Able to ping server {id} at {address}, but unable to '
                 'connect via ssh within the allowed time of {timeout} '
@@ -686,3 +727,4 @@ class ServerBehaviors(BaseBehavior):
             "destination_type": destination_type,
             "delete_on_termination": delete_on_termination}]
         return block_device_matrix
+

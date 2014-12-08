@@ -22,6 +22,11 @@ class ConfigDriveConfig(ConfigSectionInterface):
     SECTION_NAME = 'config_drive'
 
     @property
+    def supported(self):
+        """Config drive supported"""
+        return self.get_boolean("supported")
+
+    @property
     def openstack_meta_filepath(self):
         """Path to the Openstack Config Drive metadata"""
         return self.get("openstack_meta_path")

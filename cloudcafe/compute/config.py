@@ -38,6 +38,10 @@ class ComputeConfig(ConfigSectionInterface):
     def hypervisor(self):
         return self.get("hypervisor")
 
+    @property
+    def vnc_supported(self):
+        return self.get_boolean("vnc_supported")
+
 
 class ComputeEndpointConfig(ConfigSectionInterface):
 
