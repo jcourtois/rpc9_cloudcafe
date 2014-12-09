@@ -33,13 +33,14 @@ class MemoizedAuthServiceCompositeException(Exception):
 class MemoizedAuthServiceComposite(object):
 
     def __init__(
-            self, service_name, region, endpoint_config=None,
+            self, service_name, region, url_type=None, endpoint_config=None,
             user_config=None):
 
         self.endpoint_config = endpoint_config or UserAuthConfig()
         self.user_config = user_config or UserConfig()
         self.service_name = service_name
         self.region = region
+        self.url_type = url_type
 
     @classmethod
     @memoized
