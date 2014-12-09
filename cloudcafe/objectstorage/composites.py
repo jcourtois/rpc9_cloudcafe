@@ -13,7 +13,8 @@ class _ObjectStorageAuthComposite(MemoizedAuthServiceComposite):
         self.config = ObjectStorageConfig()
 
         super(_ObjectStorageAuthComposite, self).__init__(
-            self.config.identity_service_name, self.config.region)
+            self.config.identity_service_name, self.config.region,
+            url_type=self.config.endpoint_type)
 
 
 class ObjectStorageComposite(object):
@@ -27,7 +28,7 @@ class ObjectStorageComposite(object):
         self.config = ObjectStorageAPIConfig()
         self.auth_info = self._auth_composite()
 
-        self.storage_url = self.auth_info.public_url
+        self.storage_url = self.auth_info.endpoint_url
         self.auth_token = self.auth_info.token_id
 
         if self.auth_info.auth_strategy == 'saio_tempauth':

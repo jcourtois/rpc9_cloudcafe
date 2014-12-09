@@ -43,3 +43,7 @@ class BareMetalEndpointConfig(ConfigSectionInterface):
     @property
     def bare_metal_endpoint_url(self):
         return self.get("bare_metal_endpoint_url")
+
+    @property
+    def endpoint_type(self):
+        return self.get("endpoint_type", "public_url")

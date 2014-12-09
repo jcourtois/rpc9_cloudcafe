@@ -60,6 +60,10 @@ class ComputeEndpointConfig(ConfigSectionInterface):
         """Optional override of the Compute url"""
         return self.get("compute_endpoint_url")
 
+    @property
+    def endpoint_type(self):
+        return self.get('endpoint_type', 'public_url')
+
 
 class ComputeAdminEndpointConfig(ComputeEndpointConfig):
 

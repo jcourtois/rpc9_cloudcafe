@@ -69,6 +69,10 @@ class NetworksEndpointConfig(ConfigSectionInterface):
         """Optional tenant ID to set in client request headers"""
         return self.get("header_tenant_id")
 
+    @property
+    def endpoint_type(self):
+        return self.get('endpoint_type', 'public_url')
+
 
 class NetworksAdminEndpointConfig(NetworksEndpointConfig):
     """RackerAdmin API endpoint and name"""

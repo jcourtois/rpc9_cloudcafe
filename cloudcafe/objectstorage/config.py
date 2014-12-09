@@ -37,3 +37,10 @@ class ObjectStorageConfig(ConfigSectionInterface):
         Region to use.
         """
         return self.get('region')
+
+    @property
+    def endpoint_type(self):
+        """
+        Endpoint type to use
+        """
+        return self.get('endpoint_type', 'public_url')

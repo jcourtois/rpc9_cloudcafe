@@ -61,10 +61,11 @@ class _ComputeAuthComposite(MemoizedAuthServiceComposite):
         super(_ComputeAuthComposite, self).__init__(
             service_name=self.compute_endpoint_config.compute_endpoint_name,
             region=self.compute_endpoint_config.region,
+            url_type=self.compute_endpoint_config.endpoint_type,
             endpoint_config=self._auth_endpoint_config,
             user_config=self._auth_user_config)
 
-        self.servers_url = self.public_url
+        self.servers_url = self.endpoint_url
 
         if self.compute_endpoint_config.compute_endpoint_url:
             self.servers_url = '{0}/{1}'.format(

@@ -32,3 +32,7 @@ class BlockStorageConfig(ConfigSectionInterface):
     @property
     def availability_zone(self):
         return self.get('availability_zone')
+
+    @property
+    def endpoint_type(self):
+        return self.get('endpoint_type', 'public_url')

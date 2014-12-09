@@ -36,10 +36,11 @@ class _BareMetalAuthComposite(MemoizedAuthServiceComposite):
         super(_BareMetalAuthComposite, self).__init__(
             service_name=self.metal_endpoint_config.bare_metal_endpoint_name,
             region=self.metal_endpoint_config.region,
+            url_type=self.metal_endpoint_config.endpoint_type,
             endpoint_config=self._auth_endpoint_config(),
             user_config=self._auth_user_config())
 
-        self.bare_metal_url = self.public_url
+        self.bare_metal_url = self.endpoint_url
 
         if self.metal_endpoint_config.bare_metal_endpoint_url:
             self.bare_metal_url = '{0}/{1}'.format(

@@ -47,10 +47,11 @@ class _NetworksAuthComposite(MemoizedAuthServiceComposite):
         super(_NetworksAuthComposite, self).__init__(
             service_name=self.networks_endpoint_config.networks_endpoint_name,
             region=self.networks_endpoint_config.region,
+            url_type=self.networks_endpoint_config.endpoint_type,
             endpoint_config=self._auth_endpoint_config,
             user_config=self._auth_user_config)
 
-        self.networks_url = self.public_url
+        self.networks_url = self.endpoint_url
 
         # Overriding the publicURL if networks_endpoint_url given
         if self.networks_endpoint_config.networks_endpoint_url:

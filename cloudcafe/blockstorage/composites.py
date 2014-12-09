@@ -23,7 +23,7 @@ class _BlockstorageAuthComposite(MemoizedAuthServiceComposite):
         self.availability_zone = \
             self.config.availability_zone
         super(_BlockstorageAuthComposite, self).__init__(
-            self.config.identity_service_name, self.config.region)
+            self.config.identity_service_name, self.config.region, self.config.endpoint_type)
 
 
 class _BaseVolumesComposite(object):
@@ -35,7 +35,7 @@ class _BaseVolumesComposite(object):
         self.blockstorage_auth = _BlockstorageAuthComposite()
         self.config = self._config()
         self.client = self._client(
-            url=self.blockstorage_auth.public_url,
+            url=self.blockstorage_auth.endpoint_url,
             auth_token=self.blockstorage_auth.token_id,
             serialize_format=self.config.serialize_format,
             deserialize_format=self.config.deserialize_format)

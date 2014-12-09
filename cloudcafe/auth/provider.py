@@ -97,16 +97,16 @@ class MemoizedAuthServiceComposite(object):
         return self.access_data.token.tenant.id_
 
     @property
-    def public_url(self):
+    def endpoint_url(self):
         endpoint = self.service.get_endpoint(self.region)
         try:
-            return endpoint.public_url
-        except AttributeError:
+            return getattr(endpoint, self.url_type)
+        except:
             raise MemoizedAuthServiceCompositeException(
                 "Unable to locate an endpoint with the region '{0}' in the "
                 "service '{1}' from the service service catalog for user {2}. "
-                "No public URL found.".format(
-                    self.region, self.service_name, self.tenant_id))
+                "No {3} found.".format(
+                    self.region, self.service_name, self.tenant_id, self.url_type))
 
     @property
     def service(self):
